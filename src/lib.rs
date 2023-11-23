@@ -399,6 +399,33 @@ mod serde_impls {
             d.deserialize_string(MStrVisitor(PhantomData))
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use serde_json::json;
+        use serde_test::{assert_tokens, Token};
+
+        #[test]
+        fn basic() {
+            assert_tokens(&MStr::new_borrowed("roar"), &[Token::BorrowedStr("roar")]);
+            assert_tokens(&MStr::new_owned("honk"), &[Token::Str("honk")]);
+            assert_tokens(&MStr::new_owned("quack"), &[Token::String("quack")]);
+        }
+
+        #[test]
+        fn de_borrowed() {
+            let s: MStr<'_> = serde_json::from_str("\"ribbit\"").unwrap();
+
+            assert_eq!(s, "ribbit");
+            assert!(s.is_borrowed());
+        }
+
+        // #[test]
+        // fn de_owned() {
+        //     let s: MStr<'_> = serde_json::from_value(json!("frogs <3")).unwrap();
+        // }
+    }
 }
 
 // ===== Unit Tests =====
