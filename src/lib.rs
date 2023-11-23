@@ -314,9 +314,21 @@ impl PartialEq<str> for MStr<'_> {
     }
 }
 
+impl PartialEq<&str> for MStr<'_> {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
+}
+
 impl PartialEq<MStr<'_>> for str {
     fn eq(&self, other: &MStr<'_>) -> bool {
         self == other.as_str()
+    }
+}
+
+impl PartialEq<MStr<'_>> for &str {
+    fn eq(&self, other: &MStr<'_>) -> bool {
+        *self == other.as_str()
     }
 }
 
