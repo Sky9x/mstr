@@ -1,0 +1,128 @@
+name: CI
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  push:
+  pull_request:
+
+env:
+  msrv: '1.65' # keep in sync with Cargo.toml
+
+jobs:
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUSTFLAGS: -Dwarnings
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - id: toolchain-msrv
+        name: Install Rust ${{env.msrv}} (MSRV)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{env.msrv}}
+          components: clippy
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Install Rust Beta
+        uses: dtolnay/rust-toolchain@beta
+        with:
+          components: clippy
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+
+      - name: Clippy (MSRV)
+        run: cargo +${{steps.toolchain-msrv.outputs.name}} clippy --all-features --all-targets --workspace && cargo clean
+      - name: Clippy (stable)
+        run: cargo +stable clippy --all-features --all-targets --workspace && cargo clean
+      - name: Clippy (beta)
+        run: cargo +beta clippy --all-features --all-targets --workspace && cargo clean
+      - name: Clippy (nightly)
+        run: cargo +nightly clippy --all-features --all-targets --workspace && cargo clean
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - id: toolchain-msrv
+        name: Install Rust ${{env.msrv}} (MSRV)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{env.msrv}}
+          components: rustfmt
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install Rust Beta
+        uses: dtolnay/rust-toolchain@beta
+        with:
+          components: rustfmt
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+
+      - name: Check Formatting (MSRV)
+        run: cargo +${{steps.toolchain-msrv.outputs.name}} fmt --all --check
+      - name: Check Formatting (stable)
+        run: cargo +stable fmt --all --check
+      - name: Check Formatting (beta)
+        run: cargo +beta fmt --all --check
+      - name: Check Formatting (nightly)
+        run: cargo +nightly fmt --all --check
+
+  test:
+    name: Test ${{matrix.rust-channel}} ${{matrix.os == 'windows' && '(windows)' || ''}}
+    runs-on: ${{matrix.os}}-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        os: [ubuntu, windows]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - id: toolchain-msrv
+        name: Install Rust ${{env.msrv}} (MSRV)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{env.msrv}}
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust Beta
+        uses: dtolnay/rust-toolchain@beta
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Test (MSRV)
+        run: cargo +${{steps.toolchain-msrv.outputs.name}} test --all-features --all-targets --workspace
+      - name: Test (stable)
+        run: cargo +stable test --all-features --all-targets --workspace
+      - name: Test (beta)
+        run: cargo +beta test --all-features --all-targets --workspace
+      - name: Test (nightly)
+        run: cargo +nightly test --all-features --all-targets --workspace
