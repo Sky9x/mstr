@@ -506,6 +506,12 @@ mod tests {
     }
 
     #[test]
+    fn len() {
+        assert_eq!(MStr::new_borrowed("12345").len(), 5);
+        assert_eq!(MStr::new_owned("12345").len(), 5);
+    }
+
+    #[test]
     fn borrowed_stays_borrowed() {
         let s = "1234";
         let mstr = MStr::new_borrowed(s);
