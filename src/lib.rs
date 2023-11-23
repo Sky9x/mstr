@@ -1,5 +1,4 @@
-//! [`MStr`] is a 2-word, immutable version of `Cow<str>`.
-
+#![doc = include_str!("../README.md")]
 #![no_std]
 
 extern crate alloc;
