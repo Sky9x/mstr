@@ -372,10 +372,10 @@ mod serde_impls {
         }
     }
 
-    struct MStrVisitor<'a>(PhantomData<fn() -> MStr<'a>>);
+    struct MStrVisitor;
 
-    impl<'de: 'a, 'a> Visitor<'de> for MStrVisitor<'a> {
-        type Value = MStr<'a>;
+    impl Visitor<'_> for MStrVisitor {
+        type Value = MStr<'static>;
 
         fn expecting(&self, f: &mut Formatter) -> fmt::Result {
             f.write_str("a string")
@@ -385,32 +385,27 @@ mod serde_impls {
             Ok(MStr::new_owned(s))
         }
 
-        fn visit_borrowed_str<E: Error>(self, s: &'de str) -> Result<Self::Value, E> {
-            Ok(MStr::new_borrowed(s))
-        }
-
         fn visit_string<E: Error>(self, s: String) -> Result<Self::Value, E> {
             Ok(MStr::new_owned(s))
         }
     }
 
-    impl<'de: 'a, 'a> Deserialize<'de> for MStr<'a> {
+    impl<'de, 'a> Deserialize<'de> for MStr<'a> {
         fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-            d.deserialize_string(MStrVisitor(PhantomData))
+            d.deserialize_string(MStrVisitor)
         }
     }
 
     #[cfg(test)]
     mod tests {
         use super::*;
-        use serde_json::json;
         use serde_test::{assert_tokens, Token};
 
         #[test]
         fn basic() {
-            assert_tokens(&MStr::new_borrowed("roar"), &[Token::BorrowedStr("roar")]);
-            assert_tokens(&MStr::new_owned("honk"), &[Token::Str("honk")]);
-            assert_tokens(&MStr::new_owned("quack"), &[Token::String("quack")]);
+            assert_tokens(&MStr::from("roar"), &[Token::BorrowedStr("roar")]);
+            assert_tokens(&MStr::from("honk"), &[Token::Str("honk")]);
+            assert_tokens(&MStr::from("quack"), &[Token::String("quack")]);
         }
 
         #[test]
