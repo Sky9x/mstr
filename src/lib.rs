@@ -44,7 +44,6 @@ impl<'a> MStr<'a> {
         MStr::_new(s.as_ptr(), s.len(), false)
     }
 
-    #[inline]
     #[must_use]
     pub fn new_owned(s: impl Into<Box<str>>) -> MStr<'a> {
         let s = s.into();
@@ -103,7 +102,6 @@ impl<'a> MStr<'a> {
         self.into_string().into_boxed_str()
     }
 
-    #[inline]
     #[must_use]
     pub fn into_cow(self) -> Cow<'a, str> {
         let ptr = self.as_str_ptr();
@@ -357,7 +355,7 @@ impl PartialOrd<MStr<'_>> for str {
     }
 }
 
-// -- serde --
+// ===== serde =====
 
 #[cfg(feature = "serde")]
 mod serde_impls {
@@ -365,11 +363,15 @@ mod serde_impls {
     use serde::de::{Error, Visitor};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+    // -- Serialize --
+
     impl Serialize for MStr<'_> {
         fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             s.serialize_str(self.as_str())
         }
     }
+
+    // -- Deserialize --
 
     struct MStrVisitor;
 
@@ -394,6 +396,8 @@ mod serde_impls {
             d.deserialize_string(MStrVisitor)
         }
     }
+
+    // -- Unit Tests --
 
     #[cfg(test)]
     mod tests {
