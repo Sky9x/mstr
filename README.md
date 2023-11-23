@@ -20,3 +20,7 @@
 [docs-rs]: https://docs.rs/mstr
 
 `MStr` is a 2-word, immutable version of `Cow<str>`.
+
+## License
+
+This project is licensed under the MIT license OR the Apache 2.0 license, at your choice.
