@@ -492,8 +492,8 @@ impl Default for MStr<'_> {
     /// assert!(default.is_borrowed());
     /// ```
     fn default() -> Self {
-        // dangling
-        MStr::new_borrowed(<&str>::default())
+        // a dangling (suitably aligned) slice of length 0 is always valid
+        MStr::_new(NonNull::<u8>::dangling().as_ptr(), 0, false)
     }
 }
 
