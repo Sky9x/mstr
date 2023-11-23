@@ -28,7 +28,9 @@ pub struct MStr<'a> {
     // so the top bit is never used and thus available for tagging
     len: usize,
 
+    // use the lifetime (also makes it covariant)
     _marker1: PhantomData<&'a str>,
+    // tell dropck that we might dealloc
     _marker2: PhantomData<Box<str>>,
 }
 
