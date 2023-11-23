@@ -345,3 +345,46 @@ impl PartialOrd<MStr<'_>> for str {
         self.partial_cmp(other.as_str())
     }
 }
+
+// -- serde --
+
+#[cfg(feature = "serde")]
+mod serde_impls {
+    use super::*;
+    use serde::de::{Error, Visitor};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    impl Serialize for MStr<'_> {
+        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+            s.serialize_str(self.as_str())
+        }
+    }
+
+    struct MStrVisitor<'a>(PhantomData<fn() -> MStr<'a>>);
+
+    impl<'de: 'a, 'a> Visitor<'de> for MStrVisitor<'a> {
+        type Value = MStr<'a>;
+
+        fn expecting(&self, f: &mut Formatter) -> fmt::Result {
+            f.write_str("a string")
+        }
+
+        fn visit_str<E: Error>(self, s: &str) -> Result<Self::Value, E> {
+            Ok(MStr::new_owned(s))
+        }
+
+        fn visit_borrowed_str<E: Error>(self, s: &'de str) -> Result<Self::Value, E> {
+            Ok(MStr::new_borrowed(s))
+        }
+
+        fn visit_string<E: Error>(self, s: String) -> Result<Self::Value, E> {
+            Ok(MStr::new_owned(s))
+        }
+    }
+
+    impl<'de: 'a, 'a> Deserialize<'de> for MStr<'a> {
+        fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+            d.deserialize_string(MStrVisitor(PhantomData))
+        }
+    }
+}
