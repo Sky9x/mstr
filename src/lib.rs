@@ -546,6 +546,37 @@ mod tests {
     }
 
     #[test]
+    fn covariant_lt() {
+        fn same_lt<'a>(a: &MStr<'a>, b: &MStr<'a>, s: &'a str) {
+            assert_eq!(a, b);
+            assert_eq!(a, s);
+            assert_eq!(b, s);
+        }
+
+        let st1: MStr<'static> = MStr::new_borrowed("oink");
+        let st2: MStr<'static> = MStr::new_owned("oink");
+
+        same_lt(&st1, &st2, "oink");
+
+        let s = String::from("oink");
+        let ms = MStr::new_borrowed(&s);
+
+        same_lt(&st1, &ms, &s);
+
+        //
+
+        fn coerce_any_lt_owned<'a>() -> MStr<'a> {
+            MStr::new_owned("abc")
+        }
+        assert_eq!(coerce_any_lt_owned(), "abc");
+
+        fn coerce_any_lt_borrowed<'a>() -> MStr<'a> {
+            MStr::new_borrowed("123")
+        }
+        assert_eq!(coerce_any_lt_borrowed(), "123");
+    }
+
+    #[test]
     fn assert_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
 
