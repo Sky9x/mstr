@@ -119,10 +119,10 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
 
       - name: Test (MSRV)
-        run: cargo +${{steps.toolchain-msrv.outputs.name}} test --all-features --all-targets --workspace
+        run: cargo +${{steps.toolchain-msrv.outputs.name}} test --all-features --workspace
       - name: Test (stable)
-        run: cargo +stable test --all-features --all-targets --workspace
+        run: cargo +stable test --all-features --workspace
       - name: Test (beta)
-        run: cargo +beta test --all-features --all-targets --workspace
+        run: cargo +beta test --all-features --workspace
       - name: Test (nightly)
-        run: cargo +nightly test --all-features --all-targets --workspace
+        run: cargo +nightly test --all-features --workspace
