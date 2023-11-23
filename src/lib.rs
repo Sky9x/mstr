@@ -349,6 +349,20 @@ impl PartialEq<MStr<'_>> for String {
     }
 }
 
+// Box<str>
+
+impl PartialEq<Box<str>> for MStr<'_> {
+    fn eq(&self, other: &Box<str>) -> bool {
+        self.as_str() == &**other
+    }
+}
+
+impl PartialEq<MStr<'_>> for Box<str> {
+    fn eq(&self, other: &MStr<'_>) -> bool {
+        &**self == other.as_str()
+    }
+}
+
 // -- [Partial]Ord --
 
 impl Ord for MStr<'_> {
