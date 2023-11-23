@@ -11,6 +11,7 @@ use core::cmp::Ordering;
 use core::fmt::{Debug, Display, Formatter, Pointer};
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
+use core::ops::Deref;
 use core::ptr::NonNull;
 use core::{fmt, mem, ptr, str};
 
@@ -571,14 +572,13 @@ impl From<MStr<'_>> for Box<str> {
 
 // -- Convert Ref --
 
-// TODO is this a good idea? i think so but
-// impl Deref for MStr<'_> {
-//     type Target = str;
-//
-//     fn deref(&self) -> &Self::Target {
-//         self.as_str()
-//     }
-// }
+impl Deref for MStr<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
+}
 
 impl AsRef<str> for MStr<'_> {
     fn as_ref(&self) -> &str {
