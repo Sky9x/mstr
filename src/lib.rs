@@ -399,6 +399,8 @@ mod serde_impls {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use serde::de::DeserializeOwned;
+        use serde_json::json;
         use serde_test::{assert_tokens, Token};
 
         #[test]
@@ -409,17 +411,31 @@ mod serde_impls {
         }
 
         #[test]
-        fn de_borrowed() {
-            let s: MStr<'_> = serde_json::from_str("\"ribbit\"").unwrap();
+        fn always_de_owned() {
+            let not_static = String::from("\"frogs <3\"");
 
-            assert_eq!(s, "ribbit");
-            assert!(s.is_borrowed());
+            let s: MStr<'static> = serde_json::from_str(&not_static).unwrap();
+
+            assert_eq!(s, "frogs <3");
+            assert!(s.is_owned());
         }
 
-        // #[test]
-        // fn de_owned() {
-        //     let s: MStr<'_> = serde_json::from_value(json!("frogs <3")).unwrap();
-        // }
+        #[test]
+        fn de_value() {
+            let s: MStr<'static> =
+                serde_json::from_value(json!("i like frogs can you tell")).unwrap();
+
+            assert_eq!(s, "i like frogs can you tell");
+            assert!(s.is_owned());
+        }
+
+        #[test]
+        fn assert_deserialize_owned() {
+            fn assert_deserialize_owned<T: DeserializeOwned>() {}
+
+            assert_deserialize_owned::<MStr>();
+            assert_deserialize_owned::<MStr<'static>>();
+        }
     }
 }
 
@@ -531,7 +547,7 @@ mod tests {
     }
 
     #[test]
-    fn send_sync() {
+    fn assert_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
 
         assert_send_sync::<MStr>();
