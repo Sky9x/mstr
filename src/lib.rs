@@ -400,3 +400,119 @@ mod serde_impls {
         }
     }
 }
+
+// ===== Unit Tests =====
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // fix inference
+    type Cow<'a> = alloc::borrow::Cow<'a, str>;
+
+    #[test]
+    fn correct_repr() {
+        assert!(MStr::new_borrowed("abc").is_borrowed());
+        assert!(!MStr::new_borrowed("abc").is_owned());
+
+        assert!(MStr::new_owned("123").is_owned());
+        assert!(!MStr::new_owned("123").is_borrowed());
+    }
+
+    #[test]
+    fn empty() {
+        assert!(MStr::new_borrowed("").is_empty());
+        assert!(MStr::new_owned("").is_empty());
+        assert!(MStr::default().is_empty());
+
+        assert_eq!(MStr::new_borrowed("").len(), 0);
+        assert_eq!(MStr::new_owned("").len(), 0);
+        assert_eq!(MStr::default().len(), 0);
+    }
+
+    #[test]
+    fn borrowed_stays_borrowed() {
+        let s = "1234";
+        let mstr = MStr::new_borrowed(s);
+
+        assert_eq!(mstr, s);
+        assert_eq!(mstr.as_str(), s);
+
+        assert_eq!(mstr.as_ptr(), s.as_ptr());
+        assert_eq!(mstr.as_str().as_ptr(), s.as_ptr());
+        assert_eq!(mstr.as_str_ptr(), s as *const str);
+
+        let clone = mstr.clone();
+
+        assert!(clone.is_borrowed());
+        assert!(!clone.is_owned());
+
+        assert_eq!(mstr, clone);
+        assert_eq!(mstr.as_ptr(), clone.as_ptr());
+        assert_eq!(mstr.as_str_ptr(), clone.as_str_ptr());
+    }
+
+    #[test]
+    fn into_cow() {
+        assert_eq!(MStr::new_borrowed("meow").into_cow(), Cow::Borrowed("meow"));
+        assert_eq!(
+            MStr::new_owned("woof").into_cow(),
+            Cow::Owned(String::from("woof"))
+        );
+        assert_eq!(
+            MStr::new_cow(Cow::Borrowed("purr")).into_cow(),
+            Cow::Borrowed("purr")
+        );
+        assert_eq!(
+            MStr::new_cow(Cow::Owned("bark".into())).into_cow(),
+            Cow::Owned(String::from("bark"))
+        );
+    }
+
+    #[test]
+    fn roundtrip() {
+        assert_eq!(MStr::new_borrowed("foo").into_string(), String::from("foo"));
+        assert_eq!(MStr::new_owned("bar").into_string(), String::from("bar"));
+    }
+
+    #[test]
+    fn roundtrip_string_ptr() {
+        let s = String::from("quack");
+        let ptr = s.as_ptr();
+        let mstr = MStr::new_owned(s);
+
+        assert_eq!(mstr, "quack");
+        assert_eq!(mstr.as_ptr(), ptr);
+        assert_eq!(mstr.into_string().as_ptr(), ptr);
+    }
+
+    #[test]
+    fn owned_clone() {
+        let mstr = MStr::new_owned("quack");
+        let mstr2 = mstr.clone();
+
+        assert!(mstr.is_owned());
+        assert!(mstr2.is_owned());
+        assert!(!mstr2.is_borrowed());
+
+        assert_eq!(mstr, mstr2);
+        assert_ne!(mstr.as_ptr(), mstr2.as_ptr());
+        assert_ne!(mstr.as_str_ptr(), mstr2.as_str_ptr());
+    }
+
+    #[test]
+    fn static_lt() {
+        let owned: MStr<'static> = MStr::new_owned("abc");
+        let borrowed: MStr<'static> = MStr::new_borrowed("abc");
+
+        assert_eq!(owned, borrowed);
+    }
+
+    #[test]
+    fn send_sync() {
+        fn assert_send_sync<T: Send + Sync>() {}
+
+        assert_send_sync::<MStr>();
+        assert_send_sync::<MStr<'static>>();
+    }
+}
