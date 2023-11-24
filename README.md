@@ -68,6 +68,12 @@ This crate has 1 feature (off by default):
 Deserialization always returns an owned `MStr` (same behavior as `Cow`).
 
 
+### No Std
+
+This crate does not require the standard library (it is marked `#![no_std]`),
+but it does require `alloc` (obviously).
+
+
 ## Contributing
 Contributions on [GitHub](https://github.com/Sky9x/mstr) are welcome!
 Feel free to open a PR or an issue for anything!
