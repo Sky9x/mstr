@@ -354,6 +354,37 @@ impl<'a> MStr<'a> {
         self.len & TAG == 0
     }
 
+    /// If this `MStr<'a>` is borrowed, get the underlying `&'a str`.
+    /// Useful if you want access to the borrowed data for longer than the borrow of `&self`.
+    ///
+    /// This will return `Some` if `self` is borrowed, and `None` if `self` is owned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use mstr::MStr;
+    /// let mstr: MStr<'static> = MStr::new_borrowed("abc");
+    /// let s: Option<&'static str> = mstr.as_borrowed();
+    ///
+    /// assert_eq!(s, Some("abc"));
+    /// ```
+    ///
+    /// If `self` is owned:
+    /// ```
+    /// # use mstr::MStr;
+    /// assert_eq!(MStr::new_owned("abc").as_borrowed(), None);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn as_borrowed(&self) -> Option<&'a str> {
+        if self.is_borrowed() {
+            // SAFETY: self is borrowed which means it is an &'a str
+            Some(unsafe { &*self.as_str_ptr() })
+        } else {
+            None
+        }
+    }
+
     /// Gets the length of the underlying string slice.
     ///
     /// # Examples
@@ -891,6 +922,16 @@ mod tests {
         assert_eq!(mstr, mstr2);
         assert_ne!(mstr.as_ptr(), mstr2.as_ptr());
         assert_ne!(mstr.as_str_ptr(), mstr2.as_str_ptr());
+    }
+
+    #[test]
+    fn as_borrowed() {
+        let s = String::from("meow");
+        let mstr = MStr::new_borrowed(&s);
+        let s2 = mstr.as_borrowed();
+        drop(mstr);
+        assert_eq!(s2, Some("meow"));
+        assert_eq!(s2.unwrap(), s);
     }
 
     #[test]
