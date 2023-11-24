@@ -849,6 +849,14 @@ mod tests {
     }
 
     #[test]
+    fn owned_empty() {
+        // even though its dangling it should still be marked as owned
+        // behaviour has to be consistent
+        assert!(MStr::new_owned("").is_owned());
+        assert!(MStr::new_owned(Box::<str>::default()).is_owned());
+    }
+
+    #[test]
     fn len() {
         assert_eq!(MStr::new_borrowed("12345").len(), 5);
         assert_eq!(MStr::new_owned("12345").len(), 5);
