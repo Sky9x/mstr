@@ -135,12 +135,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - id: miri-history
-        name: Fetch Miri Component History
+      - name: Fetch Miri Component History
+        id: miri-history
         run: |
           {
-            echo "JSON<<EOF"
-            curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri.json
+            echo 'JSON_RESPONSE<<EOF'
+            curl https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri.json
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
