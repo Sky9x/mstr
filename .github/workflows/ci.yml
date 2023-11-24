@@ -137,17 +137,12 @@ jobs:
 
       - name: Fetch Miri Component History
         id: miri-history
-        run: |
-          {
-            echo 'JSON_RESPONSE<<EOF'
-            curl https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri.json
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
+        run: echo "miri=$(curl https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)" >> "$GITHUB_OUTPUT"
 
-      - name: Install Rust Nightly (latest with miri)
+      - name: Install Rust Nightly ${{ steps.miri-history.outputs.miri }}
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-${{ fromJSON(steps.miri-history.outputs.JSON).last_available }}
+          toolchain: nightly-${{ steps.miri-history.outputs.miri }}
           components: miri
 
       - name: Miri Test
