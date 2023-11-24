@@ -886,19 +886,23 @@ mod tests {
 
     #[test]
     fn into_cow() {
-        assert_eq!(MStr::new_borrowed("meow").into_cow(), Cow::Borrowed("meow"));
-        assert_eq!(
-            MStr::new_owned("woof").into_cow(),
-            Cow::Owned(String::from("woof"))
-        );
-        assert_eq!(
+        assert!(matches!(
+            MStr::new_borrowed("meow").into_cow(),
+            Cow::Borrowed("meow")
+        ));
+        assert!(matches!(
             MStr::new_cow(Cow::Borrowed("purr")).into_cow(),
             Cow::Borrowed("purr")
-        );
-        assert_eq!(
+        ));
+
+        assert!(matches!(MStr::new_owned("woof").into_cow(), Cow::Owned(_)));
+        assert!(matches!(
             MStr::new_cow(Cow::Owned("bark".into())).into_cow(),
-            Cow::Owned(String::from("bark"))
-        );
+            Cow::Owned(_)
+        ));
+
+        assert_eq!(MStr::new_owned("woof").into_cow(), "woof");
+        assert_eq!(MStr::new_cow(Cow::Owned("bark".into())).into_cow(), "bark");
     }
 
     #[test]
