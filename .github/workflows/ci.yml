@@ -93,7 +93,7 @@ jobs:
         run: cargo +nightly fmt --all --check
 
   test:
-    name: Test ${{matrix.rust-channel}} ${{matrix.os == 'windows' && '(windows)' || ''}}
+    name: Test ${{matrix.os == 'windows' && '(windows)' || ''}}
     runs-on: ${{matrix.os}}-latest
     timeout-minutes: 30
     strategy:
@@ -126,3 +126,42 @@ jobs:
         run: cargo +beta test --all-features --workspace
       - name: Test (nightly)
         run: cargo +nightly test --all-features --workspace
+
+  miri:
+    name: Test (miri)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - id: toolchain-msrv
+        name: Install Rust ${{env.msrv}} (MSRV)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{env.msrv}}
+          components: miri
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: miri
+
+      - name: Install Rust Beta
+        uses: dtolnay/rust-toolchain@beta
+        with:
+          components: miri
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+
+      - name: Test (MSRV)
+        run: cargo +${{steps.toolchain-msrv.outputs.name}} miri test --all-features --workspace
+      - name: Test (stable)
+        run: cargo +stable miri test --all-features --workspace
+      - name: Test (beta)
+        run: cargo +beta miri test --all-features --workspace
+      - name: Test (nightly)
+        run: cargo +nightly miri test --all-features --workspace
