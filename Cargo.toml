@@ -1,8 +1,8 @@
 [package]
 name = "mstr"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
-rust-version = "1.68" # keep in sync with .github/workflows/ci.yml
+rust-version = "1.65" # keep in sync with .github/workflows/ci.yml
 description = "MStr is a 2-word, immutable Cow<str>"
 authors = ["Sky <sky@sky9.dev>"]
 repository = "https://github.com/Sky9x/mstr"

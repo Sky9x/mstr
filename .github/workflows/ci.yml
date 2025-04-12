@@ -9,7 +9,7 @@ on:
   pull_request:
 
 env:
-  msrv: '1.68' # keep in sync with Cargo.toml
+  msrv: '1.65' # keep in sync with Cargo.toml
 
 jobs:
   clippy:
@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        os: [ubuntu, windows]
+        os: [ ubuntu, windows ]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

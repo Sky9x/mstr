@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![no_std]
+#![deny(unsafe_op_in_unsafe_fn)]
+#![deny(elided_lifetimes_in_paths)]
 
 extern crate alloc;
 
@@ -27,15 +29,14 @@ const MASK: usize = !TAG;
 /// See the [crate docs](crate) for more info.
 pub struct MStr<'a> {
     ptr: NonNull<u8>,
+
     // if high bit (TAG) is set, we are owned
     // rust requires all allocations to be less than isize::MAX bytes,
     // so the top bit is never used and thus available for tagging
     len: usize,
 
     // use the lifetime (also makes it covariant)
-    _marker1: PhantomData<&'a str>,
-    // tell dropck that we might dealloc
-    _marker2: PhantomData<Box<str>>,
+    _marker: PhantomData<&'a str>,
 }
 
 unsafe impl Send for MStr<'_> {}
@@ -178,9 +179,7 @@ impl<'a> MStr<'a> {
             // SAFETY: always comes from a valid string
             ptr: unsafe { NonNull::new_unchecked(ptr.cast_mut()) },
             len: if tag { len | TAG } else { len },
-
-            _marker1: PhantomData,
-            _marker2: PhantomData,
+            _marker: PhantomData,
         }
     }
 
@@ -737,8 +736,8 @@ impl PartialOrd<MStr<'_>> for str {
 #[cfg(feature = "serde")]
 mod serde_impls {
     use super::*;
-    use serde::de::{Error, Visitor};
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::de::{Deserialize, Deserializer, Error, Visitor};
+    use serde::ser::{Serialize, Serializer};
 
     // -- Serialize --
 
@@ -750,12 +749,12 @@ mod serde_impls {
 
     // -- Deserialize --
 
-    struct MStrVisitor;
+    struct MStrVisitor<'a>(PhantomData<fn() -> MStr<'a>>);
 
-    impl Visitor<'_> for MStrVisitor {
-        type Value = MStr<'static>;
+    impl<'a, 'de> Visitor<'de> for MStrVisitor<'a> {
+        type Value = MStr<'a>;
 
-        fn expecting(&self, f: &mut Formatter) -> fmt::Result {
+        fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
             f.write_str("a string")
         }
 
@@ -770,7 +769,7 @@ mod serde_impls {
 
     impl<'de, 'a> Deserialize<'de> for MStr<'a> {
         fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-            d.deserialize_string(MStrVisitor)
+            d.deserialize_string(MStrVisitor(PhantomData))
         }
     }
 
@@ -813,7 +812,7 @@ mod serde_impls {
         fn assert_deserialize_owned() {
             fn assert_deserialize_owned<T: DeserializeOwned>() {}
 
-            assert_deserialize_owned::<MStr>();
+            assert_deserialize_owned::<MStr<'_>>();
             assert_deserialize_owned::<MStr<'static>>();
         }
     }
@@ -919,7 +918,9 @@ mod tests {
 
         assert_eq!(mstr, "quack");
         assert_eq!(mstr.as_ptr(), ptr);
-        assert_eq!(mstr.into_string().as_ptr(), ptr);
+
+        let s2 = mstr.into_string();
+        assert_eq!(s2.as_ptr(), ptr);
     }
 
     #[test]
@@ -972,7 +973,7 @@ mod tests {
 
         same_lt(&st1, &ms, &s);
 
-        //
+        // --
 
         fn coerce_any_lt_owned<'a>() -> MStr<'a> {
             MStr::new_owned("abc")
@@ -989,7 +990,7 @@ mod tests {
     fn assert_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
 
-        assert_send_sync::<MStr>();
+        assert_send_sync::<MStr<'_>>();
         assert_send_sync::<MStr<'static>>();
     }
 }
