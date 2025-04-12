@@ -749,10 +749,10 @@ mod serde_impls {
 
     // -- Deserialize --
 
-    struct MStrVisitor<'a>(PhantomData<fn() -> MStr<'a>>);
+    struct MStrVisitor;
 
-    impl<'a, 'de> Visitor<'de> for MStrVisitor<'a> {
-        type Value = MStr<'a>;
+    impl Visitor<'_> for MStrVisitor {
+        type Value = MStr<'static>;
 
         fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
             f.write_str("a string")
@@ -767,9 +767,9 @@ mod serde_impls {
         }
     }
 
-    impl<'de, 'a> Deserialize<'de> for MStr<'a> {
+    impl<'de> Deserialize<'de> for MStr<'_> {
         fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-            d.deserialize_string(MStrVisitor(PhantomData))
+            d.deserialize_string(MStrVisitor)
         }
     }
 
